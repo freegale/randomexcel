@@ -28,25 +28,19 @@
 
 <body>
     <pre>
-        录入需要抽取的数据量（尽量控制小于5000条）：<input type="number" name="itemCount" id="itemCount" placeholder="未设置将抽取全部数据" max="1000"/>
+        1. 录入需要抽取的数据量（尽量控制小于5000条）：<input type="number" name="itemCount" id="itemCount" placeholder="未设置将抽取全部数据" max="1000" style="width:400px;"/>
     </pre>
     <pre>
-        <div id="drop">将Excel文件拖动到此处</div>
-        或者选择一个文件： <input type="file" name="xlfile" id="xlf" /> 
-        <hr/>
+        2. 选择一个文件： <input type="file" name="xlfile" id="xlf" /> 
+        <br/>
+        3. <input type="submit" value="导出" id="xport" onclick="export_xlsx();" disabled="disabled">
     </pre>
-    <p>
-        <input type="submit" value="导出excel文件" id="xport" onclick="export_xlsx();" disabled="disabled">
-    </p>
-    <div id="htmlout">
-
-    </div>
     <br />
     <hr/>
     <div>
         使用方法：
         <p>1. 录入需要抽取的数据的数量（尽量控制小于5000条，不然导出会很慢）</p>
-        <p>2. 选择文件:将.xlsx文件拖入选择框，或者点击按钮选择一个文件</p>
+        <p>2. 点击按钮选择一个文件</p>
         <p>3. 等待抽取数据完成（数据越多，等待时间越长）</p>
         <p>4. 点击“导出”按钮，将抽取的数据导出</p>
     </div>
@@ -56,12 +50,10 @@
     <script>
         var X = XLSX;
         var cDg;
+        var XPORT = document.getElementById('xport');
+        var ITEMCOUNT = document.getElementById('itemCount');
 
         var process_wb = (function () {
-            var XPORT = document.getElementById('xport');
-            var HTMLOUT = document.getElementById('htmlout');
-            var ITEMCOUNT = document.getElementById('itemCount');
-
             var getRandomArray = function (list, total) {
                 var total = total || list.length;
                 if (!list || !list.slice) return [];
@@ -86,20 +78,10 @@
                 var gendata = getRandomArray(data, itemCountValue);
 
                 /* update canvas-datagrid */
-                if (!cDg) cDg = canvasDatagrid({ parentNode: HTMLOUT, data: gendata });
-                cDg.style.height = '100%';
-                cDg.style.width = '100%';
+                if (!cDg) cDg = {};
                 cDg.data = gendata;
                 XPORT.disabled = false;
-
-                /* create schema (for A,B,C column headings) */
-                var range = XLSX.utils.decode_range(ws['!ref']);
-                for (var i = range.s.c; i <= range.e.c; ++i) cDg.schema[i - range.s.c].title = XLSX.utils.encode_col(i);
-
-                HTMLOUT.style.height = (window.innerHeight - 400) + "px";
-                HTMLOUT.style.width = (window.innerWidth - 50) + "px";
-
-                if (typeof console !== 'undefined') console.log("output", new Date());
+                XPORT.value = "导出";
             };
         })();
 
@@ -122,31 +104,9 @@
         })();
 
         (function () {
-            var drop = document.getElementById('drop');
-            var itemCount = document.getElementById('itemCount');
-            if (!drop.addEventListener) return;
-
-            function handleDrop(e) {
-                e.stopPropagation();
-                e.preventDefault();
-                do_file(e.dataTransfer.files);
-            }
-
-            function handleDragover(e) {
-                e.stopPropagation();
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'copy';
-            }
-
-            drop.addEventListener('dragenter', handleDragover, false);
-            drop.addEventListener('dragover', handleDragover, false);
-            drop.addEventListener('drop', handleDrop, false);
-        })();
-
-        (function () {
             var xlf = document.getElementById('xlf');
             if (!xlf.addEventListener) return;
-            function handleFile(e) { do_file(e.target.files); }
+            function handleFile(e) { XPORT.disabled = true;debugger;XPORT.value="抽取中...";do_file(e.target.files); }
             xlf.addEventListener('change', handleFile, false);
         })();
 
